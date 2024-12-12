@@ -9,7 +9,6 @@ using UnityEngine.UI;
 public class UIManager : SimpleInstance<UIManager>
 {
     [SerializeField] ValueUI valuePrefab;
-    [SerializeField] ValueUI valuePrefabSmall;
 
     [Header("Enemy")]
     [SerializeField] TMP_Text enemyNameText;
@@ -89,19 +88,6 @@ public class UIManager : SimpleInstance<UIManager>
         {
             PlayerTest player = players[i];
             value.Init(player.PlayerName, player.CurrentHealth);
-
-            //ROCK PAPER SCISSORS
-            if (FightManager.instance.PLAYER_LIFE_ARE_CARDS)
-            {
-                List<EValuesTest> cards = new List<EValuesTest>(player.CurrentDeck);
-                cards.AddRange(player.UsedCards);
-                UpdateElementsInContainer(valuePrefabSmall, value.content, cards.Count, (v, i) =>
-                {
-                    Sprite icon = IconsManager.instance.GetIcon(cards[i]);
-                    v.Init(icon);
-                });
-                value.Init(player.PlayerName, cards.Count);
-            }
         });
     }
 
