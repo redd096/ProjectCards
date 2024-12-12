@@ -68,8 +68,7 @@ public class FightManager : SimpleInstance<FightManager>
         //draw cards
         CurrentPlayer.DrawAttackCards();
 
-        //update deck and be sure AttackButton is disabled
-        UIManager.instance.UpdateCurrentPlayer();
+        //be sure AttackButton is disabled
         UIManager.instance.ToggleAttackButton(false);
 
         //move to select cards

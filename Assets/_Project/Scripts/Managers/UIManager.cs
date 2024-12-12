@@ -23,7 +23,6 @@ public class UIManager : SimpleInstance<UIManager>
 
     [Header("Current Player")]
     [SerializeField] TMP_Text currentPlayerText;
-    [SerializeField] Transform playerDeckContainer;
 
     [Header("Attack Scene")]
     [SerializeField] GameObject drawCardsScene;
@@ -40,6 +39,15 @@ public class UIManager : SimpleInstance<UIManager>
     [SerializeField] GameObject enemyTurnScene;
     [SerializeField] Button enemyTurnButton;
 
+    [Header("Deck Piles")]
+    [SerializeField] Button drawPileButton;
+    [SerializeField] Button discardPileButton;
+    [SerializeField] GameObject deckPileCanvas;
+    [SerializeField] GameObject drawPileText;
+    [SerializeField] GameObject discardPileText;
+    [SerializeField] Button closePileButton;
+    [SerializeField] Transform deckPileContainer;
+
     //pooling
     Pooling<ValueUI> pool_valuePrefab = new Pooling<ValueUI>();
     Pooling<PlayerHealthUI> pool_playerHealthPrefab = new Pooling<PlayerHealthUI>();
@@ -54,6 +62,9 @@ public class UIManager : SimpleInstance<UIManager>
         attackButton.onClick.AddListener(FightManager.instance.PlayerAttack);
         completeTurnButton.onClick.AddListener(FightManager.instance.UpdatePlayerTurn);
         enemyTurnButton.onClick.AddListener(FightManager.instance.EnemyAttack);
+        drawPileButton.onClick.AddListener(() => TogglePileCanvas(true, true));
+        discardPileButton.onClick.AddListener(() => TogglePileCanvas(true, false));
+        closePileButton.onClick.AddListener(() => TogglePileCanvas(false));
     }
 
     public void RemovePlaceholders()
@@ -62,8 +73,8 @@ public class UIManager : SimpleInstance<UIManager>
         RemovePlaceholders(enemyHealthContainer);
         RemovePlaceholders(enemyCardsContainer);
         RemovePlaceholders(playersHealthContainer);
-        RemovePlaceholders(playerDeckContainer);
         RemovePlaceholders(attackCardsContainer);
+        RemovePlaceholders(deckPileContainer);
     }
 
     [Button]
@@ -107,13 +118,12 @@ public class UIManager : SimpleInstance<UIManager>
     }
 
     /// <summary>
-    /// Set name and deck for current player
+    /// Set name for current player
     /// </summary>
     public void UpdateCurrentPlayer()
     {
         PlayerTest currentPlayer = FightManager.instance.CurrentPlayer;
         currentPlayerText.text = currentPlayer.PlayerName;
-        UpdateValuesInContainer(playerDeckContainer, currentPlayer.CurrentDeck);
     }
 
     /// <summary>
@@ -167,6 +177,27 @@ public class UIManager : SimpleInstance<UIManager>
     public void ShowEnemyTurnScene()
     {
         ShowScene(enemyTurnScene);
+    }
+
+    /// <summary>
+    /// Show or hide Pile Canvas
+    /// </summary>
+    /// <param name="show">show or hide</param>
+    /// <param name="deckPile">deck pile or discard pile</param>
+    public void TogglePileCanvas(bool show, bool deckPile = true)
+    {
+        //when show, set text and instantiate player cards
+        if (show)
+        {
+            drawPileText.SetActive(deckPile);
+            discardPileText.SetActive(deckPile == false);
+
+            PlayerTest currentPlayer = FightManager.instance.CurrentPlayer;
+            UpdateValuesInContainer(deckPileContainer, deckPile ? currentPlayer.CurrentDeck : currentPlayer.UsedCards);
+        }
+
+        //show or hide canvas
+        deckPileCanvas.SetActive(show);
     }
 
     #region private API
