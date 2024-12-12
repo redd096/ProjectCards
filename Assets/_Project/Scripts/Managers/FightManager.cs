@@ -40,6 +40,8 @@ public class FightManager : SimpleInstance<FightManager>
 
     private void StartFight()
     {
+        UIManager.instance.RemovePlaceholders();
+
         //set enemy default values
         Enemy.ResetCurrentLife();
         UIManager.instance.UpdateEnemyHealth();

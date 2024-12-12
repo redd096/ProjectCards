@@ -1,4 +1,3 @@
-using redd096.Attributes;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,7 +19,6 @@ public class EnemyTest : MonoBehaviour
     private List<EValuesTest> selectedCards = new List<EValuesTest>();
     public List<EValuesTest> SelectedCards => selectedCards;
 
-    [Button]
     public void ResetCurrentLife()
     {
         //add default life
@@ -31,7 +29,6 @@ public class EnemyTest : MonoBehaviour
         currentLife.AddRange(values);
     }
 
-    [Button]
     public void Attack()
     {
         //do damage to every player in scene

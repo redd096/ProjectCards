@@ -1,4 +1,3 @@
-using redd096.Attributes;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -34,7 +33,6 @@ public class PlayerTest : MonoBehaviour
         deck.AddRange(cards);
     }
 
-    [Button]
     private void ShuffleUsedInDeck()
     {
         //put used cards in deck
@@ -44,13 +42,11 @@ public class PlayerTest : MonoBehaviour
 
     #endregion
 
-    [Button]
     public void ResetCurrentLife()
     {
         currentHealth = startHealth;
     }
 
-    [Button]
     public void ResetDecks()
     {
         //reset decks
@@ -65,7 +61,6 @@ public class PlayerTest : MonoBehaviour
     /// <summary>
     /// Draw cards from deck
     /// </summary>
-    [Button]
     public void DrawAttackCards()
     {
         for (int i = 0; i < numberOfAttackCardsToDraw; i++)
@@ -80,7 +75,6 @@ public class PlayerTest : MonoBehaviour
         }
     }
 
-    [Button]
     public void Attack()
     {
         //get selected attack cards

@@ -40,6 +40,11 @@ public class UIManager : SimpleInstance<UIManager>
     [SerializeField] GameObject enemyTurnScene;
     [SerializeField] Button enemyTurnButton;
 
+    //pooling
+    Pooling<ValueUI> pool_valuePrefab = new Pooling<ValueUI>();
+    Pooling<PlayerHealthUI> pool_playerHealthPrefab = new Pooling<PlayerHealthUI>();
+    Pooling<AttackCardUI> pool_attackCardPrefab = new Pooling<AttackCardUI>();
+
     protected override void InitializeInstance()
     {
         base.InitializeInstance();
@@ -49,6 +54,16 @@ public class UIManager : SimpleInstance<UIManager>
         attackButton.onClick.AddListener(FightManager.instance.PlayerAttack);
         completeTurnButton.onClick.AddListener(FightManager.instance.UpdatePlayerTurn);
         enemyTurnButton.onClick.AddListener(FightManager.instance.EnemyAttack);
+    }
+
+    public void RemovePlaceholders()
+    {
+        //remove placeholders
+        RemovePlaceholders(enemyHealthContainer);
+        RemovePlaceholders(enemyCardsContainer);
+        RemovePlaceholders(playersHealthContainer);
+        RemovePlaceholders(playerDeckContainer);
+        RemovePlaceholders(attackCardsContainer);
     }
 
     [Button]
@@ -84,7 +99,7 @@ public class UIManager : SimpleInstance<UIManager>
     public void UpdatePlayersHealth()
     {
         PlayerTest[] players = FightManager.instance.Players;
-        UpdateElementsInContainer(playerHealthPrefab, playersHealthContainer, players.Length, (value, i) =>
+        UpdateElementsInContainer(pool_playerHealthPrefab, playerHealthPrefab, playersHealthContainer, players.Length, (value, i) =>
         {
             PlayerTest player = players[i];
             value.Init(player.PlayerName, player.CurrentHealth);
@@ -126,7 +141,7 @@ public class UIManager : SimpleInstance<UIManager>
         ShowScene(selectCardsScene);
 
         PlayerTest currentPlayer = FightManager.instance.CurrentPlayer;
-        StartCoroutine(UpdateElementsInContainer(attackCardPrefab, attackCardsContainer, currentPlayer.NumberOfAttackCardsToDraw, delayBetweenInstantiate: 0.25f, (value, i) =>
+        StartCoroutine(UpdateElementsInContainer(pool_attackCardPrefab, attackCardPrefab, attackCardsContainer, currentPlayer.NumberOfAttackCardsToDraw, delayBetweenInstantiate: 0.25f, (value, i) =>
         {
             //instantiate AttackCard, set icon, and set button OnClick
             Sprite icon = IconsManager.instance.GetIcon(currentPlayer.AttackCards[i]);
@@ -156,40 +171,47 @@ public class UIManager : SimpleInstance<UIManager>
 
     #region private API
 
+    private void RemovePlaceholders(Transform container)
+    {
+        //destroy gameObjects placed in editor
+        for (int i = container.childCount - 1; i >= 0; i--)
+            Destroy(container.GetChild(i).gameObject);
+    }
+
     private void UpdateValuesInContainer(Transform container, List<EValuesTest> values)
     {
         //instantiate ValueUI and set icon
-        UpdateElementsInContainer(valuePrefab, container, values.Count, (value, i) =>
+        UpdateElementsInContainer(pool_valuePrefab, valuePrefab, container, values.Count, (value, i) =>
         {
             Sprite icon = IconsManager.instance.GetIcon(values[i]);
             value.Init(icon);
         });
     }
 
-    private void UpdateElementsInContainer<T>(T prefab, Transform container, int length, System.Action<T, int> onInstantiate) where T : Object
+    private void UpdateElementsInContainer<T>(Pooling<T> pool, T prefab, Transform container, int length, System.Action<T, int> onInstantiate) where T : Object
     {
         //remove previous
         for (int i = container.childCount - 1; i >= 0; i--)
-            Destroy(container.GetChild(i).gameObject);
+            Pooling.Destroy(container.GetChild(i).gameObject);
 
         //instantiate icons
         for (int i = 0; i < length; i++)
         {
-            T value = Instantiate(prefab, container);
+            T value = pool.Instantiate(prefab, container);
             onInstantiate?.Invoke(value, i);
         }
     }
 
-    private IEnumerator UpdateElementsInContainer<T>(T prefab, Transform container, int length, float delayBetweenInstantiate, System.Action<T, int> onInstantiate) where T : Object
+    private IEnumerator UpdateElementsInContainer<T>(Pooling<T> pool, T prefab, Transform container, int length, float delayBetweenInstantiate, System.Action<T, int> onInstantiate) where T : Object
     {
         //remove previous
         for (int i = container.childCount - 1; i >= 0; i--)
-            Destroy(container.GetChild(i).gameObject);
+            Pooling.Destroy(container.GetChild(i).gameObject);
 
         //instantiate icons
         for (int i = 0; i < length; i++)
         {
-            T value = Instantiate(prefab, container);
+            T value = pool.Instantiate(prefab, container);
             onInstantiate?.Invoke(value, i);
             yield return new WaitForSeconds(delayBetweenInstantiate);
         }
