@@ -33,7 +33,6 @@ public class UIManager : SimpleInstance<UIManager>
     [SerializeField] Transform attackCardsContainer;
     [SerializeField] Button attackButton;
     [Space]
-    [SerializeField] GameObject endTurnScene;
     [SerializeField] Button completeTurnButton;
     [Space]
     [SerializeField] GameObject enemyTurnScene;
@@ -53,6 +52,9 @@ public class UIManager : SimpleInstance<UIManager>
     Pooling<PlayerHealthUI> pool_playerHealthPrefab = new Pooling<PlayerHealthUI>();
     Pooling<AttackCardUI> pool_attackCardPrefab = new Pooling<AttackCardUI>();
 
+    private AttackCardUI[] playerCardsInScene;
+
+
     protected override void InitializeInstance()
     {
         base.InitializeInstance();
@@ -67,6 +69,18 @@ public class UIManager : SimpleInstance<UIManager>
         closePileButton.onClick.AddListener(() => TogglePileCanvas(false));
     }
 
+    [Button(ButtonAttribute.EEnableType.PlayMode)]
+    private void UpdateUIInScene()
+    {
+        UpdateEnemyHealth();
+        UpdateEnemyCardsSelection();
+        UpdatePlayersHealth();
+        UpdateCurrentPlayerName();
+    }
+
+    /// <summary>
+    /// If there are placeholders in scene from the editor, remove them
+    /// </summary>
     public void RemovePlaceholders()
     {
         //remove placeholders
@@ -75,15 +89,6 @@ public class UIManager : SimpleInstance<UIManager>
         RemovePlaceholders(playersHealthContainer);
         RemovePlaceholders(attackCardsContainer);
         RemovePlaceholders(deckPileContainer);
-    }
-
-    [Button]
-    public void UpdateAll()
-    {
-        UpdateEnemyHealth();
-        UpdateEnemyCardsSelection();
-        UpdatePlayersHealth();
-        UpdateCurrentPlayer();
     }
 
     /// <summary>
@@ -120,7 +125,7 @@ public class UIManager : SimpleInstance<UIManager>
     /// <summary>
     /// Set name for current player
     /// </summary>
-    public void UpdateCurrentPlayer()
+    public void UpdateCurrentPlayerName()
     {
         PlayerTest currentPlayer = FightManager.instance.CurrentPlayer;
         currentPlayerText.text = currentPlayer.PlayerName;
@@ -151,24 +156,69 @@ public class UIManager : SimpleInstance<UIManager>
         ShowScene(selectCardsScene);
 
         PlayerTest currentPlayer = FightManager.instance.CurrentPlayer;
+        playerCardsInScene = new AttackCardUI[currentPlayer.NumberOfAttackCardsToDraw];
+
         StartCoroutine(UpdateElementsInContainer(pool_attackCardPrefab, attackCardPrefab, attackCardsContainer, currentPlayer.NumberOfAttackCardsToDraw, delayBetweenInstantiate: 0.25f, (value, i) =>
         {
+            //save reference between index and card in UI
+            playerCardsInScene[i] = value;
+
             //instantiate AttackCard, set icon, and set button OnClick
             Sprite icon = IconsManager.instance.GetIcon(currentPlayer.AttackCards[i]);
             value.Init(icon, () =>
             {
-                bool isCardSelected = FightManager.instance.PlayerSelectAttackCard(i);
-                value.ToggleSelectCard(isCardSelected);
+                ESelectCardTest isCardSelected = FightManager.instance.PlayerSelectAttackCard(i);
+
+                //update ui
+                value.ToggleSelectCard(isCardSelected == ESelectCardTest.Selected);
+                UpdateSelectedCardsNumbers();
+
             });
         }));
     }
 
-    /// <summary>
-    /// Show end turn scene
-    /// </summary>
-    public void ShowEndTurnScene()
+    private void UpdateSelectedCardsNumbers()
     {
-        ShowScene(endTurnScene);
+        PlayerTest currentPlayer = FightManager.instance.CurrentPlayer;
+
+        //update every card in scene
+        for (int i = 0; i < currentPlayer.AttackCards.Count; i++)
+        {
+            //not selected
+            if (currentPlayer.SelectedCardsToAttack.Contains(i) == false)
+            {
+                playerCardsInScene[i].SetNumberText(false);
+                continue;
+            }
+
+            //find index in selected cards
+            for (int number = 0; number < currentPlayer.SelectedCardsToAttack.Count; number++)
+            {
+                if (currentPlayer.SelectedCardsToAttack[number] == i)
+                {
+                    playerCardsInScene[i].SetNumberText(true, (number + 1).ToString());
+                    break;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Enable or disable CompleteTurn button. When enable is true, disable OnClick event on the attack cards
+    /// </summary>
+    /// <param name="isEnabled"></param>
+    public void ToggleCompleteTurnButton(bool isEnabled)
+    {
+        completeTurnButton.interactable = isEnabled;
+
+        //on enable, remove onClick event from attack cards
+        if (isEnabled)
+        {
+            foreach (var card in pool_attackCardPrefab.PooledObjects)
+            {
+                card.RemoveOnClickEvent();
+            }
+        }
     }
 
     /// <summary>
@@ -253,7 +303,6 @@ public class UIManager : SimpleInstance<UIManager>
         //hide every scene
         drawCardsScene.SetActive(false);
         selectCardsScene.SetActive(false);
-        endTurnScene.SetActive(false);
         enemyTurnScene.SetActive(false);
 
         //show only the correct one

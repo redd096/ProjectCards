@@ -9,7 +9,7 @@ public class FightManager : SimpleInstance<FightManager>
     [Tooltip("Enemy turn doesn't have turn to damage, but player receive damage if lose RockPaperScissors")] public bool NO_ENEMY_TURN = true;
     [Tooltip("Player doesn't have a counter, but lose cards like enemy when lose RockPaperScissors")] public bool PLAYER_LIFE_ARE_CARDS = true;
 
-    [SerializeField] bool autoUpdateOnAwake;
+    [SerializeField] bool findEnemiesAndPlayersOnAwake;
     public EnemyTest Enemy;
     public PlayerTest[] Players;
 
@@ -21,9 +21,9 @@ public class FightManager : SimpleInstance<FightManager>
         base.InitializeInstance();
 
         //find enemy and players in scene
-        if (autoUpdateOnAwake)
+        if (findEnemiesAndPlayersOnAwake)
         {
-            AutoUpdate();
+            FindEnemiesAndPlayersInScene();
         }
 
         //start fight
@@ -31,7 +31,7 @@ public class FightManager : SimpleInstance<FightManager>
     }
 
     [Button]
-    private void AutoUpdate()
+    private void FindEnemiesAndPlayersInScene()
     {
         //find enemy and players in scene
         Enemy = FindAnyObjectByType<EnemyTest>(FindObjectsInactive.Exclude);
@@ -56,7 +56,7 @@ public class FightManager : SimpleInstance<FightManager>
         UIManager.instance.UpdatePlayersHealth();
 
         //show first player
-        UIManager.instance.UpdateCurrentPlayer();
+        UIManager.instance.UpdateCurrentPlayerName();
         UIManager.instance.ShowDrawCardsScene();
     }
 
@@ -70,6 +70,7 @@ public class FightManager : SimpleInstance<FightManager>
 
         //be sure AttackButton is disabled
         UIManager.instance.ToggleAttackButton(false);
+        UIManager.instance.ToggleCompleteTurnButton(false);
 
         //move to select cards
         UIManager.instance.ShowSelectCardsScene();
@@ -80,10 +81,10 @@ public class FightManager : SimpleInstance<FightManager>
     /// </summary>
     /// <param name="indexSelectedCard"></param>
     /// <returns>Return if this card is selected or not</returns>
-    public bool PlayerSelectAttackCard(int indexSelectedCard)
+    public ESelectCardTest PlayerSelectAttackCard(int indexSelectedCard)
     {
         PlayerTest currentPlayer = CurrentPlayer;
-        bool isCardSelected = false;
+        ESelectCardTest result = ESelectCardTest.NotSelected;
 
         //select card
         if (currentPlayer.SelectedCardsToAttack.Contains(indexSelectedCard) == false)
@@ -92,20 +93,21 @@ public class FightManager : SimpleInstance<FightManager>
             if (playerCanSelectOtherCards)
             {
                 currentPlayer.SelectedCardsToAttack.Add(indexSelectedCard);
-                isCardSelected = true;
+                result = ESelectCardTest.Selected;
             }
         }
         //or deselect card
         else
         {
             currentPlayer.SelectedCardsToAttack.Remove(indexSelectedCard);
+            result = ESelectCardTest.Removed;
         }
 
         //if this is the last one, enable attack button
         bool isLastCardToSelect = currentPlayer.SelectedCardsToAttack.Count >= currentPlayer.NumberOfAttackCardsForDamage;
         UIManager.instance.ToggleAttackButton(isLastCardToSelect);
 
-        return isCardSelected;
+        return result;
     }
 
     /// <summary>
@@ -119,8 +121,9 @@ public class FightManager : SimpleInstance<FightManager>
         UIManager.instance.UpdateEnemyCardsSelection();
         UIManager.instance.UpdatePlayersHealth();
 
-        //and move to end turn scene
-        UIManager.instance.ShowEndTurnScene();
+        //and enable CompleteTurn button
+        UIManager.instance.ToggleAttackButton(false);
+        UIManager.instance.ToggleCompleteTurnButton(true);
     }
 
     /// <summary>
@@ -144,7 +147,7 @@ public class FightManager : SimpleInstance<FightManager>
         }
 
         //else, start next player turn
-        UIManager.instance.UpdateCurrentPlayer();
+        UIManager.instance.UpdateCurrentPlayerName();
         UIManager.instance.ShowDrawCardsScene();
     }
 
@@ -158,7 +161,7 @@ public class FightManager : SimpleInstance<FightManager>
         UIManager.instance.UpdatePlayersHealth();
 
         //and move to player turn scene
-        UIManager.instance.UpdateCurrentPlayer();
+        UIManager.instance.UpdateCurrentPlayerName();
         UIManager.instance.ShowDrawCardsScene();
     }
 }

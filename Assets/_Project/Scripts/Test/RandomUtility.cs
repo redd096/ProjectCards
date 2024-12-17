@@ -61,7 +61,8 @@ public static class RandomUtility
     }
 
     /// <summary>
-    /// Return random values, but can't return same value two times
+    /// Return random values, but can't return same value two times 
+    /// NB if array length is lower, returnLength is ignored
     /// </summary>
     /// <param name="returnLength">Return is an array of this length. NB if arrayLength is lower, this value is ignored</param>
     /// <param name="arrayLength">For every value to return, get an int from 0 to this length</param>
@@ -132,7 +133,8 @@ public static class RandomUtility
     }
 
     /// <summary>
-    /// Return random values, but can't return same value two times
+    /// Return random values, but can't return same value two times. 
+    /// NB if array length is lower, returnLength is ignored
     /// </summary>
     /// <param name="returnLength">Return is an array of this length. NB if arrayLength is lower, this value is ignored</param>
     /// <param name="array">For every value to return, get a value from this array</param>
