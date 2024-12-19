@@ -41,9 +41,9 @@ public class AttackCardUI : MonoBehaviour
     /// </summary>
     /// <param name="isEnabled"></param>
     /// <param name="number"></param>
-    public void SetNumberText(bool isEnabled, string number = "")
+    public void SetNumberText(bool isEnabled, int number = 0)
     {
         numberContainer.SetActive(isEnabled);
-        numberText.text = number;
+        numberText.text = number.ToString();
     }
 }

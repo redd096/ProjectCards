@@ -196,7 +196,7 @@ public class UIManager : SimpleInstance<UIManager>
             {
                 if (currentPlayer.SelectedCardsToAttack[number] == i)
                 {
-                    playerCardsInScene[i].SetNumberText(true, (number + 1).ToString());
+                    playerCardsInScene[i].SetNumberText(true, number + 1);
                     break;
                 }
             }
